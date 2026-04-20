@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIG Manager - Setlist Digital</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --primary: #ff9800; /* Cor laranja para destaque no escuro */
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        h2 { color: var(--primary); text-align: center; }
+        .container { max-width: 500px; margin: auto; }
+        
+        /* Inputs */
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: var(--card);
+            border: 1px solid #333;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            border: none;
+            color: black;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Lista de Músicas */
+        .search-box { margin-bottom: 20px; border-color: var(--primary); }
+        .musica-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+        }
+        .musica-card h3 { margin: 0; color: var(--primary); }
+        .musica-card pre { 
+            background: #000; 
+            padding: 10px; 
+            overflow-x: auto; 
+            font-family: monospace;
+            color: #00ff00; /* Estilo terminal para a cifra */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🎸 GIG Manager</h2>
+    
+    <div id="add-form">
+        <input type="text" id="titulo" placeholder="Nome da Música">
+        <input type="text" id="artista" placeholder="Artista">
+        <textarea id="cifra" rows="5" placeholder="Cole a cifra aqui..."></textarea>
+        <button onclick="salvarMusica()">Adicionar ao Repertório</button>
+    </div>
+
+    <hr style="margin: 30px 0; border: 0.5px solid #333;">
+
+    <input type="text" id="busca" class="search-box" placeholder="🔍 Buscar música ou artista..." onkeyup="filtrar()">
+    
+    <div id="lista-repertorio">
+        </div>
+</div>
+
+<script>
+    let repertorio = JSON.parse(localStorage.getItem('meuRepertorio')) || [];
+
+    function salvarMusica() {
+        const titulo = document.getElementById('titulo').value;
+        const artista = document.getElementById('artista').value;
+        const cifra = document.getElementById('cifra').value;
+
+        if(!titulo || !cifra) return alert("Preencha o título e a cifra!");
+
+        const novaMusica = { titulo, artista, cifra };
+        repertorio.push(novaMusica);
+        localStorage.setItem('meuRepertorio', JSON.stringify(repertorio));
+        
+        // Limpa campos
+        document.getElementById('titulo').value = '';
+        document.getElementById('artista').value = '';
+        document.getElementById('cifra').value = '';
+        
+        renderizar();
+    }
+
+    function renderizar(filtro = '') {
+        const lista = document.getElementById('lista-repertorio');
+        lista.innerHTML = '';
+
+        repertorio
+            .filter(m => m.titulo.toLowerCase().includes(filtro.toLowerCase()) || 
+                         m.artista.toLowerCase().includes(filtro.toLowerCase()))
+            .forEach((m, index) => {
+                lista.innerHTML += `
+                    <div class="musica-card">
+                        <h3>${m.titulo}</h3>
+                        <small>${m.artista}</small>
+                        <pre>${m.cifra}</pre>
+                        <button onclick="excluir(${index})" style="background: #cc0000; color: white; padding: 5px; width: auto; font-size: 10px;">Excluir</button>
+                    </div>
+                `;
+            });
+    }
+
+    function filtrar() {
+        const termo = document.getElementById('busca').value;
+        renderizar(termo);
+    }
+
+    function excluir(index) {
+        if(confirm("Remover música?")) {
+            repertorio.splice(index, 1);
+            localStorage.setItem('meuRepertorio', JSON.stringify(repertorio));
+            renderizar();
+        }
+    }
+
+    // Inicializa a lista
+    renderizar();
+</script>
+
+</body>
+</html>
