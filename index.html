@@ -3,96 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIG Manager V2.5 - Cloud Sync</title>
+    <title>GIG Manager - Setlist Digital</title>
     <style>
-        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --primary: #ff9800; --secondary: #00e5ff; }
+        :root { --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --primary: #ff9800; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; margin: 0; }
         .container { max-width: 500px; margin: auto; }
-        h2 { color: var(--primary); text-align: center; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: var(--card); border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; margin: 10px 0; }
-        button { flex: 1; padding: 15px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .btn-save { background: var(--primary); color: black; width: 100%; }
-        .btn-cloud { background: var(--secondary); color: black; }
-        .musica-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); position: relative; }
-        pre { background: #000; padding: 10px; overflow-x: auto; color: #00ff00; font-size: 14px; border-radius: 5px; font-family: monospace; }
-        #status { font-size: 12px; color: var(--secondary); text-align: center; margin-bottom: 10px; }
-        .btn-del { background: #cc0000; color: white; width: auto; padding: 5px 10px; font-size: 12px; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; font-size: 12px; color: #888; margin-bottom: 20px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: var(--card); border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-save { background: var(--primary); color: black; }
+        .btn-del { background: #cc0000; color: white; width: auto; padding: 5px 10px; font-size: 12px; margin-top: 10px; }
+        .musica-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--primary); }
+        pre { background: #000; padding: 12px; overflow-x: auto; color: #00ff00; font-size: 14px; border-radius: 5px; font-family: 'Courier New', Courier, monospace; line-height: 1.4; }
+        hr { border: 0.5px solid #333; margin: 30px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎸 GIG Manager Pro</h2>
-    <p id="status">Pronto para a noite!</p>
+    <h2>🎸 GIG Manager</h2>
+    <p class="subtitle">Gestão de Repertório Offline para Músicos</p>
     
     <input type="text" id="titulo" placeholder="Nome da Música">
-    <input type="text" id="artista" placeholder="Artista (Opcional)">
-    
-    <div class="btn-group">
-        <button class="btn-cloud" onclick="importarDaNuvem()">☁️ Buscar na Nuvem</button>
-    </div>
-
-    <textarea id="cifra" rows="8" placeholder="A cifra ou letra aparecerá aqui..."></textarea>
+    <input type="text" id="artista" placeholder="Artista / Banda">
+    <textarea id="cifra" rows="8" placeholder="Cole aqui a letra ou a cifra..."></textarea>
     
     <button class="btn-save" onclick="salvar()">💾 Salvar no Repertório</button>
 
-    <hr style="margin: 30px 0; border: 0.5px solid #333;">
-    <input type="text" id="busca" placeholder="🔍 Filtrar por música ou artista..." onkeyup="renderizar()">
+    <hr>
+    
+    <input type="text" id="busca" placeholder="🔍 Buscar no meu repertório..." onkeyup="renderizar()">
     
     <div id="lista"></div>
 </div>
 
 <script>
-    // Usa uma chave única para evitar conflito com versões anteriores
-    let repertorio = JSON.parse(localStorage.getItem('gig_pro_v25')) || [];
-
-    async function importarDaNuvem() {
-        const titulo = document.getElementById('titulo').value;
-        const artista = document.getElementById('artista').value;
-        const status = document.getElementById('status');
-
-        if (!titulo) return alert("Digite o nome da música!");
-
-        status.innerText = "Buscando no Vagalume...";
-        
-        try {
-            const url = `https://api.vagalume.com.br/search.php?art=${artista}&mus=${titulo}`;
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.type === 'exact' || data.type === 'aprox') {
-                document.getElementById('titulo').value = data.mus[0].name;
-                document.getElementById('artista').value = data.art.name;
-                document.getElementById('cifra').value = data.mus[0].text;
-                status.innerText = "Sucesso! Música importada.";
-            } else {
-                status.innerText = "Não encontrada.";
-                alert("Música não encontrada. Tente incluir o nome do artista.");
-            }
-        } catch (error) {
-            status.innerText = "Erro de conexão com a API.";
-            console.error(error);
-        }
-    }
+    // Recupera os dados ou inicia um array vazio
+    let repertorio = JSON.parse(localStorage.getItem('gig_manager_final')) || [];
 
     function salvar() {
         const titulo = document.getElementById('titulo').value;
         const artista = document.getElementById('artista').value;
         const cifra = document.getElementById('cifra').value;
 
-        if(!titulo || !cifra) return alert("Preencha o título e a cifra!");
+        if(!titulo || !cifra) {
+            alert("Por favor, preencha pelo menos o título e a cifra!");
+            return;
+        }
 
         const musica = { titulo, artista, cifra };
         repertorio.push(musica);
-        localStorage.setItem('gig_pro_v25', JSON.stringify(repertorio));
+        localStorage.setItem('gig_manager_final', JSON.stringify(repertorio));
         
+        // Limpar campos após salvar
         document.getElementById('titulo').value = '';
         document.getElementById('artista').value = '';
         document.getElementById('cifra').value = '';
-        document.getElementById('status').innerText = "Música salva!";
         
         renderizar();
+        alert("Música salva com sucesso!");
     }
 
     function renderizar() {
@@ -100,15 +70,16 @@
         const lista = document.getElementById('lista');
         lista.innerHTML = '';
 
+        // Filtra e exibe as músicas
         repertorio.forEach((m, i) => {
             if(m.titulo.toLowerCase().includes(termo) || m.artista.toLowerCase().includes(termo)) {
                 const card = document.createElement('div');
                 card.className = 'musica-card';
                 card.innerHTML = `
                     <h3>${m.titulo}</h3>
-                    <p><small>${m.artista}</small></p>
+                    <p style="color: #ff9800; font-size: 14px; margin-top: -10px;">${m.artista}</p>
                     <pre>${m.cifra}</pre>
-                    <button class="btn-del" onclick="excluir(${i})">Excluir</button>
+                    <button class="btn-del" onclick="excluir(${i})">Excluir Música</button>
                 `;
                 lista.appendChild(card);
             }
@@ -116,13 +87,14 @@
     }
 
     function excluir(i) {
-        if(confirm("Remover do repertório?")) {
+        if(confirm("Deseja remover esta música do seu repertório?")) {
             repertorio.splice(i, 1);
-            localStorage.setItem('gig_pro_v25', JSON.stringify(repertorio));
+            localStorage.setItem('gig_manager_final', JSON.stringify(repertorio));
             renderizar();
         }
     }
 
+    // Carrega a lista assim que a página abre
     window.onload = renderizar;
 </script>
 
